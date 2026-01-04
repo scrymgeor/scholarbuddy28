@@ -22,7 +22,6 @@ else:
     st.stop()
 model = genai.GenerativeModel('gemini-2.5-flash')
 # Page Config - Rebranded to "Echo"
-st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
 
 # Connect to Firebase (Safe Connection)
 # We check if it's already connected so it doesn't crash on reload
@@ -189,6 +188,7 @@ with col2:
         for task in tasks:
             # Card UI for tasks
             st.success(f"**{task['summary']}**")
+
 
 
 
