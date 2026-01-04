@@ -14,31 +14,28 @@ st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
 # 🔑 SECURE GEMINI LOGIN
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash')
 else:
     st.error("🚨 Gemini API Key is missing in Secrets!")
     st.stop()
 
 # ==========================================
-# 2. FIREBASE CONNECTION (With Auto-Repair)
+# 2. FIREBASE CONNECTION (Via Secrets - No File)
 # ==========================================
 if not firebase_admin._apps:
     try:
-        # Load the raw file
-        with open("firebase_key.json") as f:
-            key_dict = json.load(f)
-
-        # 🔧 FIX: Repair the Private Key string
-        # This fixes the "Windows vs Linux" newline error
-        key_dict["private_key"] = key_dict["private_key"].replace("\\n", "\n")
-
-        # Connect
-        cred = credentials.Certificate(key_dict)
-        firebase_admin.initialize_app(cred)
+        # Check if the key is in Secrets
+        if "FIREBASE_KEY" in st.secrets:
+            # Parse the JSON string from secrets
+            key_dict = json.loads(st.secrets["FIREBASE_KEY"])
+            
+            # Connect
+            cred = credentials.Certificate(key_dict)
+            firebase_admin.initialize_app(cred)
+        else:
+            st.error("🚨 FIREBASE_KEY is missing in Secrets!")
+            st.stop()
         
-    except FileNotFoundError:
-        st.error("❌ firebase_key.json not found on server!")
-        st.stop()
     except Exception as e:
         st.error(f"❌ Connection Error: {e}")
         st.stop()
@@ -79,7 +76,7 @@ def reduce_load_db():
         return None
 
 # ==========================================
-# 4. THE UI (Split Columns)
+# 4. THE UI
 # ==========================================
 st.title("🌊 Echo")
 st.markdown("### Your schedule echoes your state of mind.")
@@ -90,22 +87,18 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader("💭 The Vibe Check")
     
-    # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Display history
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
     if user_input := st.chat_input("Ex: 'I am overwhelmed' or 'I feel powerful'"):
-        # Show User Message
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # Gemini Logic
         try:
             prompt = f"""
             Analyze mood: "{user_input}".
@@ -118,7 +111,6 @@ with col1:
             action = data.get('action')
             bot_reply = data.get('reply')
 
-            # Update DB
             if action == "ADD":
                 add_task_to_db(f"Deep Work: {data.get('topic')}")
                 st.toast("Added session!", icon="➕")
@@ -126,12 +118,10 @@ with col1:
                 removed = reduce_load_db()
                 if removed: st.toast(f"Removed: {removed}", icon="💨")
 
-            # Show and Save Assistant Response
             st.session_state.messages.append({"role": "assistant", "content": bot_reply})
             with st.chat_message("assistant"):
                 st.markdown(bot_reply)
             
-            # Rerun to update the calendar on the right
             st.rerun()
                 
         except Exception as e:
@@ -150,6 +140,7 @@ with col2:
     else:
         for task in tasks:
             st.success(f"**{task.get('summary', 'Task')}**")
+
 
 
 
