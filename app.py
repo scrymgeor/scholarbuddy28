@@ -15,7 +15,7 @@ st.title("🌊 Echo")
 # 🔑 SECURE GEMINI LOGIN
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 else:
     st.error("🚨 Gemini API Key is missing in Secrets!")
     st.stop()
@@ -100,6 +100,7 @@ if user_input := st.chat_input("How are you feeling?"):
             
     except Exception as e:
         st.error(f"AI Error: {e}")
+
 
 
 
