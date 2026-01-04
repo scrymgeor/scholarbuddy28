@@ -20,7 +20,7 @@ if "GOOGLE_API_KEY" in st.secrets:
 else:
     st.error("🚨 API Key is missing! Please add it to Streamlit Secrets.")
     st.stop()
-model = genai.GenerativeModel('gemini-2.5-pro')
+model = genai.GenerativeModel('gemini-2.5-flash')
 # Page Config - Rebranded to "Echo"
 st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
 
@@ -189,6 +189,7 @@ with col2:
         for task in tasks:
             # Card UI for tasks
             st.success(f"**{task['summary']}**")
+
 
 
 
