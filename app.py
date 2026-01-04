@@ -13,7 +13,7 @@ from datetime import datetime
 GOOGLE_API_KEY = "AIzaSyBt28XGAQXSwiq9sTbedtcSbRnzbhQ1cCc"
 
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Page Config - Rebranded to "Echo"
 st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
@@ -183,5 +183,6 @@ with col2:
         for task in tasks:
             # Card UI for tasks
             st.success(f"**{task['summary']}**")
+
 
 
