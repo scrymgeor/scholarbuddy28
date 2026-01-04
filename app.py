@@ -10,7 +10,7 @@ from datetime import datetime
 # 1. SETUP
 # ==========================================
 st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
-st.title("🌊 Echo")
+
 
 # 🔑 SECURE LOGIN
 # This looks for the key in the "Vault" (Streamlit Secrets)
@@ -188,6 +188,7 @@ with col2:
         for task in tasks:
             # Card UI for tasks
             st.success(f"**{task['summary']}**")
+
 
 
 
