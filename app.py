@@ -9,7 +9,7 @@ from datetime import datetime
 # 1. SETUP
 # ==========================================
 # 🔑 PASTE KEY HERE
-GOOGLE_API_KEY = "PASTE_YOUR_GEMINI_KEY_HERE"
+GOOGLE_API_KEY = "AIzaSyBt28XGAQXSwiq9sTbedtcSbRnzbhQ1cCc"
 
 genai.configure(api_key=GOOGLE_API_KEY)
 
@@ -117,6 +117,7 @@ if user_input := st.chat_input("How are you feeling?"):
             
     except Exception as e:
         st.error(f"AI Error: {e}")
+
 
 
 
