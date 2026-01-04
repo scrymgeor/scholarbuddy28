@@ -14,7 +14,7 @@ st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
 # 🔑 SECURE GEMINI LOGIN
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 else:
     st.error("🚨 Gemini API Key is missing in Secrets!")
     st.stop()
@@ -150,6 +150,7 @@ with col2:
     else:
         for task in tasks:
             st.success(f"**{task.get('summary', 'Task')}**")
+
 
 
 
