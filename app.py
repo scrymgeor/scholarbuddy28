@@ -78,7 +78,7 @@ def clear_upcoming_schedule():
 # ==========================================
 # 3. THE UI
 # ==========================================
-st.title("🌊 Echo")
+st.title("Chat With Echo")
 st.markdown("### The calendar that breathes with you.")
 
 col1, col2 = st.columns([2, 1])
@@ -178,6 +178,7 @@ with col2:
                 st.rerun()
     else:
         st.caption("Backlog is empty!")
+
 
 
 
