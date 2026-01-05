@@ -1,145 +1,116 @@
 import streamlit as st
 import google.generativeai as genai
-from google_setup import get_calendar_service # Imports your login script
-from datetime import datetime, timedelta
 import json
+import random
+from datetime import datetime
 
 # ==========================================
-# 1. CONFIGURATION
+# 1. SETUP
 # ==========================================
-# 🔑 PASTE YOUR GEMINI API KEY BELOW inside the quotes
-GOOGLE_API_KEY = "AIzaSyBt28XGAQXSwiq9sTbedtcSbRnzbhQ1cCc"
+st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
 
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
-
-# Connect to Calendar using your previous script
-try:
-    calendar_service = get_calendar_service()
-    st.toast("Connected to Google Calendar ✅")
-except:
-    st.error("Login failed. Delete token.json and try again.")
+# 🔑 SECURE GEMINI LOGIN
+if "GOOGLE_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    # Using the standard model that always works
+    model = genai.GenerativeModel('gemini-2.5-flash')
+else:
+    st.error("🚨 Gemini API Key is missing in Secrets!")
+    st.stop()
 
 # ==========================================
-# 2. CALENDAR FUNCTIONS (The "Hands")
+# 2. SIMULATED DATABASE (The "Magic" Trick)
 # ==========================================
-def get_upcoming_events():
-    """Fetch next 5 events to show the user."""
-    now = datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-    events_result = calendar_service.events().list(
-        calendarId='primary', timeMin=now,
-        maxResults=5, singleEvents=True,
-        orderBy='startTime').execute()
-    return events_result.get('items', [])
+# Instead of Firebase, we use Session State.
+# It behaves EXACTLY like a database for the demo.
+if "echo_db" not in st.session_state:
+    st.session_state.echo_db = [
+        {"summary": "Finish Hackathon Project", "created_at": "2023-10-27T10:00:00"},
+        {"summary": "Review Physics Notes", "created_at": "2023-10-27T12:00:00"}
+    ]
 
-def add_study_session(topic):
-    """Adds a 45-min study block 1 hour from now."""
-    start_time = datetime.now() + timedelta(minutes=60)
-    end_time = start_time + timedelta(minutes=45)
-    
-    event = {
-        'summary': f'🧘 Zen Study: {topic}',
-        'description': 'Scheduled by ZenScholar based on your mood.',
-        'start': {'dateTime': start_time.isoformat(), 'timeZone': 'UTC'},
-        'end': {'dateTime': end_time.isoformat(), 'timeZone': 'UTC'},
-        'colorId': '10' # Green color
-    }
-    calendar_service.events().insert(calendarId='primary', body=event).execute()
+def get_echo_tasks():
+    # Return the fake list reversed (newest first)
+    return st.session_state.echo_db[::-1]
 
-def clear_schedule():
-    """Deletes the next event (Simulating stress relief)."""
-    events = get_upcoming_events()
-    if events:
-        event_id = events[0]['id']
-        calendar_service.events().delete(calendarId='primary', eventId=event_id).execute()
-        return events[0]['summary']
+def add_task_to_db(activity):
+    st.session_state.echo_db.append({
+        "summary": activity,
+        "created_at": datetime.now().isoformat()
+    })
+
+def reduce_load_db():
+    if len(st.session_state.echo_db) > 0:
+        # Remove the last item (most recent)
+        removed = st.session_state.echo_db.pop()
+        return removed['summary']
     return None
 
 # ==========================================
-# 3. THE UI (Streamlit)
+# 3. THE UI
 # ==========================================
-st.set_page_config(page_title="ZenScholar", page_icon="🧘", layout="wide")
+st.title("🌊 Echo")
+st.markdown("### Your schedule echoes your state of mind.")
 
-# Title Section
-st.title("🧘 ZenScholar")
-st.markdown("### The mood-adaptive study companion.")
-
-# Create two columns: Chat (Left) and Calendar (Right)
 col1, col2 = st.columns([2, 1])
 
+# --- LEFT COLUMN: Chat ---
 with col1:
-    st.markdown("#### 💬 How are you feeling?")
+    st.subheader("💭 The Vibe Check")
     
-    # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
+        st.session_state.messages.append({"role": "assistant", "content": "I am Echo. How is your energy flowing right now?"})
 
-    # Display chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat Input
-    if user_input := st.chat_input("Ex: 'I am super motivated' or 'I am so stressed'"):
-        # 1. Show User Message
+    if user_input := st.chat_input("Ex: 'I am overwhelmed' or 'I feel powerful'"):
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # 2. GEMINI BRAIN LOGIC
-        with st.spinner("ZenScholar is thinking..."):
-            system_prompt = f"""
-            You are a calendar assistant. Analyze this text: "{user_input}"
-            
-            1. Determine the user's MOOD (Stressed or Motivated).
-            2. If Stressed: Return JSON {{ "action": "CLEAR", "reply": "I hear you. I've cleared your next task. Go rest." }}
-            3. If Motivated: Return JSON {{ "action": "ADD", "topic": "Deep Work", "reply": "Let's use this energy! I added a Deep Work session." }}
-            4. If Unsure: Return JSON {{ "action": "NONE", "reply": "Tell me more about how you feel." }}
-            
-            Return ONLY RAW JSON. No markdown.
+        try:
+            # AI LOGIC
+            prompt = f"""
+            Analyze mood: "{user_input}".
+            Return JSON: {{ "action": "CLEAR" or "ADD", "topic": "Study Topic", "reply": "Short empathetic advice" }}
             """
+            response = model.generate_content(prompt)
+            text = response.text.replace('```json', '').replace('```', '').strip()
+            data = json.loads(text)
             
-            response = model.generate_content(system_prompt)
+            action = data.get('action')
+            bot_reply = data.get('reply')
+
+            # UPDATE "DATABASE"
+            if action == "ADD":
+                add_task_to_db(f"Deep Work: {data.get('topic', 'Focus')}")
+                st.toast("Added session!", icon="➕")
+            elif action == "CLEAR":
+                removed = reduce_load_db()
+                if removed: st.toast(f"Removed: {removed}", icon="💨")
+
+            st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+            with st.chat_message("assistant"):
+                st.markdown(bot_reply)
             
-            try:
-                # Clean JSON
-                text = response.text.strip().replace('```json', '').replace('```', '')
-                data = json.loads(text)
+            st.rerun()
                 
-                bot_reply = data['reply']
-                action = data.get('action')
+        except Exception as e:
+            st.error(f"Echo is thinking... (Error: {e})")
 
-                # 3. PERFORM ACTION
-                if action == "ADD":
-                    add_study_session(data.get('topic', 'Study'))
-                    st.toast("📅 Calendar Updated: Added Session!", icon="✅")
-                    
-                elif action == "CLEAR":
-                    removed_event = clear_schedule()
-                    if removed_event:
-                        st.toast(f"🗑️ Removed: {removed_event}", icon="📉")
-                    else:
-                        bot_reply = "Your schedule is already empty, but take a break anyway!"
-
-                # 4. Show Bot Reply
-                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-                with st.chat_message("assistant"):
-                    st.markdown(bot_reply)
-                    
-            except Exception as e:
-                st.error(f"Error parsing Gemini: {e}")
-
+# --- RIGHT COLUMN: Calendar ---
 with col2:
-    st.markdown("#### 📅 Live Schedule")
-    if st.button("🔄 Refresh Calendar"):
-        pass # Just reruns the script
-        
-    events = get_upcoming_events()
-    if not events:
-        st.info("No upcoming events found.")
+    st.subheader("📅 Your Flow")
+    if st.button("🔄 Sync Echo"):
+        st.rerun()
+
+    tasks = get_echo_tasks()
+    
+    if not tasks:
+        st.info("Your schedule is clear like water.")
     else:
-        for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            # Clean up time string
-            time_str = start[11:16] if 'T' in start else start
-            st.success(f"**{time_str}** | {event['summary']}")
+        for task in tasks:
+            st.success(f"**{task.get('summary', 'Task')}**")
