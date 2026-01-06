@@ -3,9 +3,9 @@ import google.generativeai as genai
 import json
 from datetime import datetime
 
-# ==========================================
-# 1. SETUP & STYLING
-# ==========================================
+
+# SETUP & STYLING
+
 st.set_page_config(page_title="Echo", page_icon="🌊", layout="wide")
 
 # OCEAN THEME CSS
@@ -19,7 +19,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 🔑 SECURE GEMINI LOGIN
+# SECURE GEMINI LOGIN
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-flash')
@@ -27,11 +27,11 @@ else:
     st.error("🚨 Gemini API Key is missing in Secrets!")
     st.stop()
 
-# ==========================================
-# 2. LOGIC (Calendar + Backlog)
-# ==========================================
 
-# A. The Calendar (Time Slots)
+
+
+
+#The Calendar (Time Slots)
 if "echo_calendar" not in st.session_state:
     st.session_state.echo_calendar = [
         {"time": "09:00 AM", "task": "Morning Routine", "locked": True},
@@ -41,7 +41,7 @@ if "echo_calendar" not in st.session_state:
         {"time": "05:00 PM", "task": None, "locked": False},
     ]
 
-# B. The Backlog (Tasks waiting for assignment)
+# The Backlog (Tasks waiting for assignment)
 if "echo_backlog" not in st.session_state:
     st.session_state.echo_backlog = [
         "Math: Calculus Ch.4",
@@ -75,9 +75,9 @@ def clear_upcoming_schedule():
             cleared_count += 1
     return cleared_count
 
-# ==========================================
-# 3. THE UI
-# ==========================================
+
+#  UI
+
 st.title("Chat With Echo")
 st.markdown("### The calendar that breathes with you.")
 
@@ -178,6 +178,7 @@ with col2:
                 st.rerun()
     else:
         st.caption("Backlog is empty!")
+
 
 
 
