@@ -22,7 +22,7 @@ st.markdown("""
 # 🔑 SECURE GEMINI LOGIN
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
 else:
     st.error("🚨 Gemini API Key is missing in Secrets!")
     st.stop()
@@ -178,6 +178,7 @@ with col2:
                 st.rerun()
     else:
         st.caption("Backlog is empty!")
+
 
 
 
