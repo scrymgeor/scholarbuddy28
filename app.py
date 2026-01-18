@@ -157,7 +157,7 @@ with col2:
 
     st.markdown("---")
     
-    # 2. MANUAL TASK ENTRY (The Feature You Requested)
+    # 2. MANUAL TASK ENTRY 
     st.subheader("📝 Backlog")
     
     # Add Task Form
@@ -178,6 +178,7 @@ with col2:
                 st.rerun()
     else:
         st.caption("Backlog is empty!")
+
 
 
 
