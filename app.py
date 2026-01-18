@@ -135,7 +135,7 @@ with col1:
         except Exception as e:
             st.error(f"Error: {e}")
 
-# --- RIGHT COLUMN: Calendar + Inputs ---
+#  RIGHT COLUMN: Calendar + Inputs 
 with col2:
     st.subheader("📅 Today's Timeline")
     
@@ -168,7 +168,7 @@ with col2:
                 st.session_state.echo_backlog.append(new_task)
                 st.rerun()
 
-    # List of Tasks (with Delete)
+    # List of Tasks 
     if st.session_state.echo_backlog:
         for i, item in enumerate(st.session_state.echo_backlog):
             c1, c2 = st.columns([5, 1])
@@ -178,6 +178,7 @@ with col2:
                 st.rerun()
     else:
         st.caption("Backlog is empty!")
+
 
 
 
